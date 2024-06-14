@@ -6,13 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:myapp/detail.dart';
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     debugShowCheckedModeBanner: false,
-    initialRoute: '/',
-    routes: {
-      '/': (context) => const MyApp(),
-      '/detail': (context) => DetailPage()
-    },
+    home: MyApp(),
   ));
 }
 
@@ -28,26 +24,32 @@ class MyApp extends StatelessWidget {
       body: FutureBuilder(
         future: ambilProduk(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          } else {
-            final List products = snapshot.data;
+          if (snapshot.hasError) {
+            return Text("Terjadi Kesalahan: ${snapshot.error}");
+          }
+          // jika ada data
+          if (snapshot.hasData) {
+            final products = snapshot.data!;
             return GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisSpacing: 12, mainAxisSpacing: 12, crossAxisCount: 2),
               itemCount: products.length,
               itemBuilder: (context, index) {
-                final Map product = products[index];
-                final rupiah = product['price'] * 15000;
+                final dynamic product = products![index];
+                final num rupiah = product['price'] * 15000;
 
                 final harga = NumberFormat.currency(
                         locale: 'id_ID', symbol: 'Rp.', decimalDigits: 2)
                     .format(rupiah);
+
+                product['rupiah'] = harga;
+
                 return GestureDetector(
-                  onTap: () => Navigator.pushNamed(context, '/detail',
-                      arguments: product),
+                  onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DetailPage(product: product),
+                      )),
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 12),
                     child: Column(
@@ -74,6 +76,10 @@ class MyApp extends StatelessWidget {
               },
             );
           }
+
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
         },
       ),
     );
@@ -85,7 +91,6 @@ Future ambilProduk() async {
   if (respon.statusCode == 200) {
     final data = jsonDecode(respon.body);
     return data;
-    // return Produk.fromJson(jsonDecode(respon.body) as Map<String, dynamic>);
   } else {
     throw Exception("Gagal ambil data produk");
   }
