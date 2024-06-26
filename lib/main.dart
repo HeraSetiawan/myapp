@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -12,20 +12,42 @@ void main() {
   ));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late Future<List<Produk>> futureProduk;
+
+  @override
+  void initState() {
+    futureProduk = ambilProduk();
+    super.initState();
+  }
+
+  void tombolSuka(product) {
+    setState(() {
+      product.isFavorit = !product.isFavorit;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Toko WakEbok'),
+        title: const Text('Toko WakEbok'),
       ),
       body: FutureBuilder(
-        future: ambilProduk(),
+        future: futureProduk,
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Text("Terjadi Kesalahan: ${snapshot.error}");
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
           }
           // jika ada data
           if (snapshot.hasData) {
@@ -35,14 +57,7 @@ class MyApp extends StatelessWidget {
                   crossAxisSpacing: 12, mainAxisSpacing: 12, crossAxisCount: 2),
               itemCount: products.length,
               itemBuilder: (context, index) {
-                final dynamic product = products![index];
-                final num rupiah = product['price'] * 15000;
-
-                final harga = NumberFormat.currency(
-                        locale: 'id_ID', symbol: 'Rp.', decimalDigits: 2)
-                    .format(rupiah);
-
-                product['rupiah'] = harga;
+                final Produk product = products[index];
 
                 return GestureDetector(
                   onTap: () => Navigator.push(
@@ -53,22 +68,46 @@ class MyApp extends StatelessWidget {
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 12),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(child: Image.network(product['image'])),
+                        Expanded(
+                            child: Align(child: Image.network(product.image))),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            product['category'].toUpperCase(),
+                            product.category.toUpperCase(),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                         Text(
-                          product['title'],
+                          product.title,
+                          style: const TextStyle(fontSize: 18),
                           overflow: TextOverflow.ellipsis,
                         ),
-                        Text(harga)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              formatRupiah(product.price),
+                              style: const TextStyle(
+                                  color: Colors.teal,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Expanded(
+                              child: IconButton(
+                                  onPressed: () => tombolSuka(product),
+                                  icon: Icon(
+                                    product.isFavorit
+                                        ? Icons.favorite
+                                        : Icons.favorite_outline,
+                                    color: Colors.pink,
+                                  )),
+                            )
+                          ],
+                        )
                       ],
                     ),
                   ),
@@ -76,21 +115,28 @@ class MyApp extends StatelessWidget {
               },
             );
           }
-
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return Text("Terjadi Kesalahan: ${snapshot.error}");
         },
       ),
     );
   }
 }
 
-Future ambilProduk() async {
+String formatRupiah(num uang) {
+  final format =
+      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp.', decimalDigits: 0);
+  return format.format(uang * 15000);
+}
+
+Future<List<Produk>> ambilProduk() async {
   final respon = await http.get(Uri.parse('https://fakestoreapi.com/products'));
   if (respon.statusCode == 200) {
-    final data = jsonDecode(respon.body);
-    return data;
+    final data = jsonDecode(respon.body) as List;
+    return data
+        .map<Produk>(
+          (json) => Produk.fromJson(json),
+        )
+        .toList();
   } else {
     throw Exception("Gagal ambil data produk");
   }
@@ -99,14 +145,15 @@ Future ambilProduk() async {
 class Produk {
   final int id;
   final String title;
-  final double price;
+  final num price;
   final String description;
   final String category;
   final String image;
-  final double rate;
+  final num rate;
   final int count;
+  bool isFavorit;
 
-  const Produk({
+  Produk({
     required this.id,
     required this.title,
     required this.category,
@@ -115,5 +162,18 @@ class Produk {
     required this.description,
     required this.rate,
     required this.count,
+    this.isFavorit = false,
   });
+
+  factory Produk.fromJson(Map<String, dynamic> json) {
+    return Produk(
+        id: json['id'] as int,
+        title: json['title'] as String,
+        category: json['category'] as String,
+        image: json['image'] as String,
+        price: json['price'] as num,
+        description: json['description'] as String,
+        rate: json['rating']['rate'] as num,
+        count: json['rating']['count'] as int);
+  }
 }
