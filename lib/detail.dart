@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:myapp/main.dart';
 import 'package:http/http.dart' as http;
+import 'package:myapp/keranjang.dart';
+import 'package:myapp/provider_produk.dart';
+import 'package:provider/provider.dart';
 
 class DetailPage extends StatelessWidget {
   final Produk product;
@@ -14,6 +17,21 @@ class DetailPage extends StatelessWidget {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Detail"),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const KeranjangPage(),
+                )),
+            icon: Badge(
+                label: Consumer<ProviderProduk>(
+                  builder: (context, produk, child) =>
+                      Text("${produk.jumlahProduk}"),
+                ),
+                child: const Icon(Icons.shopping_bag)),
+          )
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -104,20 +122,29 @@ class DetailPage extends StatelessWidget {
       bottomNavigationBar: Row(
         children: [
           Expanded(
-            child: Container(
-              height: 70,
-              color: Colors.teal,
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.add_shopping_cart,
-                    size: 24,
-                    color: Colors.white,
-                  ),
-                  Text("Tambah Keranjang",
-                      style: TextStyle(color: Colors.white, fontSize: 18))
-                ],
+            child: GestureDetector(
+              onTap: () {
+                Provider.of<ProviderProduk>(context, listen: false)
+                    .masukKeranjang(product);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                        "Berhasil tambah produk ${product.title} ke keranjang")));
+              },
+              child: Container(
+                height: 70,
+                color: Colors.teal,
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_shopping_cart,
+                      size: 24,
+                      color: Colors.white,
+                    ),
+                    Text("Tambah Keranjang",
+                        style: TextStyle(color: Colors.white, fontSize: 18))
+                  ],
+                ),
               ),
             ),
           ),

@@ -4,11 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:myapp/detail.dart';
+import 'package:myapp/provider_produk.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: MyApp(),
+  runApp(ChangeNotifierProvider(
+    create: (context) => ProviderProduk(),
+    child: const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: MyApp(),
+    ),
   ));
 }
 
