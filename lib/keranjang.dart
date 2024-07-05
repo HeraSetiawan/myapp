@@ -18,40 +18,52 @@ class KeranjangPage extends StatelessWidget {
           Expanded(
             child: Consumer<ProviderProduk>(
               builder: (context, produk, child) {
-                return ListView.builder(
-                  itemCount: produk.jumlahProduk,
-                  itemBuilder: (context, index) {
-                    return Dismissible(
-                      onDismissed: (DismissDirection direction) {
-                        if (direction == DismissDirection.endToStart) {
-                          Provider.of<ProviderProduk>(context, listen: false)
-                              .hapusKeranjang(produk.listProduk[index]);
-                        }
-                      },
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        color: Colors.red,
-                        child: Icon(
-                          Icons.delete,
-                          size: 30,
-                          color: Colors.white,
-                        ),
-                      ),
-                      key: ValueKey(produk.listProduk[index].id),
-                      child: ListTile(
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          child: Image.network(produk.listProduk[index].image),
-                        ),
-                        title: Text(produk.listProduk[index].title),
-                        subtitle:
-                            Text(formatRupiah(produk.listProduk[index].price)),
-                      ),
-                    );
-                  },
-                );
+                return FutureBuilder<int>(
+                    future: produk.jumlahProduk,
+                    builder: (context, snapshot) {
+                      int jumlahProduk = snapshot.data!;
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                      return ListView.builder(
+                        itemCount: jumlahProduk,
+                        itemBuilder: (context, index) {
+                          return Dismissible(
+                            onDismissed: (DismissDirection direction) {
+                              if (direction == DismissDirection.endToStart) {
+                                Provider.of<ProviderProduk>(context,
+                                        listen: false)
+                                    .hapusKeranjang(produk.listProduk[index]);
+                              }
+                            },
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              color: Colors.red,
+                              child: const Icon(
+                                Icons.delete,
+                                size: 30,
+                                color: Colors.white,
+                              ),
+                            ),
+                            key: ValueKey(produk.listProduk[index].id),
+                            child: ListTile(
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                child: Image.network(
+                                    produk.listProduk[index].image),
+                              ),
+                              title: Text(produk.listProduk[index].title),
+                              subtitle: Text(
+                                  formatRupiah(produk.listProduk[index].price)),
+                            ),
+                          );
+                        },
+                      );
+                    });
               },
             ),
           ),
