@@ -3,19 +3,25 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:myapp/alamat.dart';
 import 'package:myapp/detail.dart';
 import 'package:myapp/keranjang.dart';
 import 'package:myapp/provider_produk.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  runApp(ChangeNotifierProvider(
-    create: (context) => ProviderProduk(),
-    child: const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MyApp(),
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProviderProduk()),
+        ChangeNotifierProvider(create: (_) => AlamatProvider()),
+      ],
+      child: const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: MyApp(),
+      ),
     ),
-  ));
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -198,16 +204,16 @@ class Produk {
         count: json['rating']['count'] as int);
   }
 
-  Map<String,dynamic> toJson() => {
-    'id': id,
-    'title': title,
-    'category': category,
-    'image': image,
-    'price': price,
-    'description': description,
-    'rating': {
-      'rate': rate,
-      'count':count,
-    },
-  };
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'category': category,
+        'image': image,
+        'price': price,
+        'description': description,
+        'rating': {
+          'rate': rate,
+          'count': count,
+        },
+      };
 }

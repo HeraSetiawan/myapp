@@ -164,8 +164,9 @@ class _KeranjangPageState extends State<KeranjangPage> {
                                               'alamatPengiriman':
                                                   _alamatPengirimanCon.text
                                             });
-
-                                            insertAlamat(alamat);
+                                            Provider.of<AlamatProvider>(context,
+                                                    listen: false)
+                                                .insertAlamat(alamat);
 
                                             Navigator.pop(context);
                                           },
@@ -198,33 +199,27 @@ class TampilanAlamat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder(
-        future: alamat(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                Alamat alamat = snapshot.data![index];
-                return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 10),
-                  height: 50,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                          'Nama Penerima: ${alamat.namaPenerima.toUpperCase()}'),
-                      Text(
-                          'Alamat Pengiriman: ${alamat.alamatPengiriman.toUpperCase()}'),
-                    ],
-                  ),
-                );
-              },
-            );
-          }
-          return Text('belum ada alamat');
-        },
-      ),
+      body: Consumer<AlamatProvider>(
+          builder: (context, value, child) => ListView.builder(
+                shrinkWrap: true,
+                itemCount: value.listAlamat.length,
+                itemBuilder: (context, index) {
+                  Alamat alamat = value.listAlamat[index];
+                  return Container(
+                    margin: EdgeInsets.symmetric(horizontal: 10),
+                    height: 50,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            'Nama Penerima: ${alamat.namaPenerima.toUpperCase()}'),
+                        Text(
+                            'Alamat Pengiriman: ${alamat.alamatPengiriman.toUpperCase()}'),
+                      ],
+                    ),
+                  );
+                },
+              )),
     );
   }
 }

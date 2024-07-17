@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -37,36 +38,50 @@ class Alamat {
   }
 }
 
-// inisiasi database
-Future<Database> initDatabase() async {
-  final database = openDatabase(
-    join(await getDatabasesPath(), 'alamat_database.db'),
-    onCreate: (db, version) {
-      return db.execute(
-          'CREATE TABLE alamat(id INTEGER PRIMARY KEY, namaPenerima TEXT, alamatPengiriman TEXT)');
-    },
-    version: 1,
-  );
+class AlamatProvider extends ChangeNotifier {
+  List<Alamat> _listAlamat = [];
+  List<Alamat> get listAlamat => _listAlamat;
 
-  return database;
-}
+  AlamatProvider() {
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await _alamat();
+  }
+
+// inisiasi database
+  Future<Database> initDatabase() async {
+    final database = openDatabase(
+      join(await getDatabasesPath(), 'alamat_database.db'),
+      onCreate: (db, version) {
+        return db.execute(
+            'CREATE TABLE alamat(id INTEGER PRIMARY KEY, namaPenerima TEXT, alamatPengiriman TEXT)');
+      },
+      version: 1,
+    );
+
+    return database;
+  }
 
 //fungsi insert alamat
-Future<void> insertAlamat(Alamat alamat) async {
-  final db = await initDatabase();
-  db.insert('alamat', alamat.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace);
-}
+  Future<void> insertAlamat(Alamat alamat) async {
+    final db = await initDatabase();
+    db.insert('alamat', alamat.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
+    await _loadData();
+  }
 
 //fungsi mengembalikan alamat
-Future<List<Alamat>> alamat() async {
-  final db = await initDatabase();
-  final List<Map<String, Object?>> alamatMap = await db.query('alamat');
-  List<Alamat> listAlamat = alamatMap
-      .map(
-        (e) => Alamat.fromMap(e),
-      )
-      .toList();
-
-  return listAlamat;
+  Future<void> _alamat() async {
+    final db = await initDatabase();
+    final List<Map<String, Object?>> alamatMap = await db.query('alamat');
+    List<Alamat> listAlamat = alamatMap
+        .map(
+          (e) => Alamat.fromMap(e),
+        )
+        .toList();
+    _listAlamat = listAlamat;
+    notifyListeners();
+  }
 }
