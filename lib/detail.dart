@@ -26,11 +26,8 @@ class DetailPage extends StatelessWidget {
                 )),
             icon: Badge(
                 label: Consumer<ProviderProduk>(
-                  builder: (context, produk, child) => FutureBuilder<int>(
-                      future: produk.jumlahProduk,
-                      builder: (context, snapshot) {
-                        return Text(snapshot.data.toString());
-                      }),
+                  builder: (context, produk, child) =>
+                      Text(produk.jumlahProduk.toString()),
                 ),
                 child: const Icon(Icons.shopping_bag)),
           )

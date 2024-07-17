@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:myapp/detail.dart';
+import 'package:myapp/keranjang.dart';
 import 'package:myapp/provider_produk.dart';
 import 'package:provider/provider.dart';
 
@@ -45,6 +46,21 @@ class _MyAppState extends State<MyApp> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Toko WakEbok'),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const KeranjangPage(),
+                )),
+            icon: Badge(
+                label: Consumer<ProviderProduk>(
+                  builder: (context, produk, child) =>
+                      Text(produk.jumlahProduk.toString()),
+                ),
+                child: const Icon(Icons.shopping_bag)),
+          )
+        ],
       ),
       body: FutureBuilder(
         future: futureProduk,
@@ -181,4 +197,17 @@ class Produk {
         rate: json['rating']['rate'] as num,
         count: json['rating']['count'] as int);
   }
+
+  Map<String,dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'category': category,
+    'image': image,
+    'price': price,
+    'description': description,
+    'rating': {
+      'rate': rate,
+      'count':count,
+    },
+  };
 }
